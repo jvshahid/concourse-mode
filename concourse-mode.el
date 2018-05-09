@@ -1,12 +1,17 @@
 ;;; package --- Summary -*- lexical-binding: t; -*-
+
+;;; concourse-mode.el --- Helper functions to work with Concourse CI
+
+;; Package-Version: 0.0.1
+
+;; Package-Requires: ((hierarchy))
+
 ;;; Commentary:
 
-;;; Package-Requires: json hierarchy
+;;; Code:
 
 (require 'json)
 (require 'hierarchy)
-
-;;; Code:
 
 (defun concourse-get-url (url callback)
   "Retrieves URL and call CALLBACK with the result.)
