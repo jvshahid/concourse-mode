@@ -1,0 +1,70 @@
+{
+  "plan": {
+    "do": [
+      {
+        "aggregate": [
+          {
+            "get": {
+              "version": {
+                "ref": "6b470ccf3fe8212aede328e0825feaffd066153c"
+              },
+              "resource": "diego-release",
+              "name": "diego-release",
+              "type": "git"
+            },
+            "id": "5a61226c"
+          },
+          {
+            "ensure": {
+              "ensure": {
+                "on_success": {
+                  "on_success": {
+                    "get": {
+                      "resource": "diego-trace-time-rotor-gcp-benchmark-logs",
+                      "name": "diego-trace-time-rotor-gcp-benchmark-logs",
+                      "type": "s3"
+                    },
+                    "id": "5aab7e1d"
+                  },
+                  "step": {
+                    "put": {
+                      "resource": "diego-trace-time-rotor-gcp-benchmark-logs",
+                      "name": "diego-trace-time-rotor-gcp-benchmark-logs",
+                      "type": "s3"
+                    },
+                    "id": "5aab7e1c"
+                  }
+                },
+                "id": "5aab7e1e"
+              },
+              "step": {
+                "on_success": {
+                  "on_success": {
+                    "task": {
+                      "privileged": false,
+                      "name": "delete-deployment"
+                    },
+                    "id": "5aab7e1a"
+                  },
+                  "step": {
+                    "task": {
+                      "privileged": false,
+                      "name": "run"
+                    },
+                    "id": "5aab7e19"
+                  }
+                },
+                "id": "5aab7e1b"
+              }
+            },
+            "id": "5aab7e1f"
+          }
+        ],
+        "id": "5aaaecfb"
+      }
+    ],
+    "id": "5aaaed03"
+  },
+  "schema": "exec.v2"
+}
+
