@@ -257,9 +257,7 @@ tree will be rendered in BUFFER"
                                             buffer)))
         (with-current-buffer buffer
           (local-set-key (kbd "q") #'kill-current-buffer)
-          (local-set-key (kbd "g") (lambda ()
-                                     (interactive)
-                                     (funcall concourse-refresh-func)))
+          (local-set-key (kbd "g") #'concourse-refresh)
           buffer)))))
 
 (defun concourse-refresh ()
@@ -275,7 +273,7 @@ will be left expanded"
                                  (widget-at)
                                  (widget-get :parent)
                                  (widget-get :open))))
-    (apply concourse-refresh-func concourse-refresh-args)
+    (funcall concourse-refresh-func concourse-refresh-args)
     (if open (widget-button-press (point-min)))
     (goto-char curpoint)))
 
@@ -427,9 +425,7 @@ number."
                                       (with-current-buffer log-buffer
                                         (setq buffer-read-only t)
                                         (local-set-key (kbd "q") #'kill-current-buffer)
-                                        (local-set-key (kbd "g") (lambda ()
-                                                                   (interactive)
-                                                                   (funcall concourse-refresh)))
+                                        (local-set-key (kbd "g") #'concourse-refresh)
                                         (local-set-key (kbd "s") (lambda ()
                                                                    (interactive)
                                                                    (switch-to-buffer view-buffer)))
@@ -438,9 +434,7 @@ number."
                                       (with-current-buffer view-buffer
                                         (setq buffer-read-only t)
                                         (local-set-key (kbd "q") #'kill-current-buffer)
-                                        (local-set-key (kbd "g") (lambda ()
-                                                                   (interactive)
-                                                                   (funcall concourse-refresh)))
+                                        (local-set-key (kbd "g") #'concourse-refresh)
                                         (local-set-key (kbd "s") (lambda ()
                                                                    (interactive)
                                                                    (switch-to-buffer log-buffer))))
@@ -458,7 +452,7 @@ number."
                            (concourse~display-json name data #'concourse-view-build buffer)
                            (switch-to-buffer buffer)
                            (setq-local concourse-refresh-func #'concourse-view-job)
-                           (setq-local concourse-refresh-args name))))))
+                           (setq-local concourse-refresh-args job))))))
 
 ;;;###autoload
 (defun concourse-view-pipeline (&optional buffer)
