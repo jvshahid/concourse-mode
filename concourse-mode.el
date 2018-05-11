@@ -370,12 +370,29 @@ number."
         (log-buffer (or log-buffer
                         (get-buffer-create "concourse-log-view")))
         (id->name (concourse-build-id->name build)))
+
     (with-current-buffer view-buffer
       (setq buffer-read-only nil)
-      (erase-buffer))
+      (erase-buffer)
+      (local-set-key (kbd "q") #'kill-current-buffer)
+      (local-set-key (kbd "g") #'concourse-refresh)
+      (local-set-key (kbd "s") (lambda ()
+                                 (interactive)
+                                 (switch-to-buffer log-buffer)))
+      (setq buffer-read-only t))
+
     (with-current-buffer log-buffer
       (setq buffer-read-only nil)
-      (erase-buffer))
+      (erase-buffer)
+      (local-set-key (kbd "q") #'kill-current-buffer)
+      (local-set-key (kbd "g") #'concourse-refresh)
+      (local-set-key (kbd "s") (lambda ()
+                                 (interactive)
+                                 (switch-to-buffer view-buffer)))
+      (setq show-trailing-whitespace nil)
+      (local-set-key (kbd "f") #'concourse-find-file-at-point)
+      (setq buffer-read-only t))
+
     (let ((buf "")
           id
           event
@@ -415,42 +432,29 @@ number."
                                             (cond
                                              ((string-prefix-p "finish-" .event)
                                               (with-current-buffer view-buffer
-                                                (concourse/insert-event `((id . ,id)
-                                                                          (event . ,event)
-                                                                          (data . ,parsed-data))
-                                                                        id->name)))
+                                                (let ((buffer-read-only nil))
+                                                  (concourse/insert-event `((id . ,id)
+                                                                            (event . ,event)
+                                                                            (data . ,parsed-data))
+                                                                          id->name))))
                                              ((equal "log" .event)
                                               (with-current-buffer log-buffer
-                                                (insert (replace-regexp-in-string
-                                                         "\r\\|\e\\[[0-9]+m"
-                                                         ""
-                                                         .data.payload))))))
+                                                (let ((buffer-read-only nil))
+                                                  (save-excursion
+                                                    (goto-char (point-max))
+                                                    (insert (replace-regexp-in-string
+                                                             "\r\\|\e\\[[0-9]+m"
+                                                             ""
+                                                             .data.payload))))))))
                                           (setq id nil
                                                 event nil
                                                 data nil))))
                                   (if (string-suffix-p "end" event)
                                       (kill-process (get-buffer-process view-buffer))))))
                     :sentinel (lambda (_ str)
-                                (if (string-prefix-p "killed" str)
-                                    (progn
-                                      (with-current-buffer log-buffer
-                                        (setq buffer-read-only t)
-                                        (local-set-key (kbd "q") #'kill-current-buffer)
-                                        (local-set-key (kbd "g") #'concourse-refresh)
-                                        (local-set-key (kbd "s") (lambda ()
-                                                                   (interactive)
-                                                                   (switch-to-buffer view-buffer)))
-                                        (setq show-trailing-whitespace nil)
-                                        (local-set-key (kbd "f") #'concourse-find-file-at-point))
-                                      (with-current-buffer view-buffer
-                                        (setq buffer-read-only t)
-                                        (local-set-key (kbd "q") #'kill-current-buffer)
-                                        (local-set-key (kbd "g") #'concourse-refresh)
-                                        (local-set-key (kbd "s") (lambda ()
-                                                                   (interactive)
-                                                                   (switch-to-buffer log-buffer))))
-                                      (switch-to-buffer log-buffer))
-                                  (message (format "curling Concourse for build events failed: %s" str))))))))
+                                (unless (string-prefix-p "killed" str)
+                                  (message (format "curling Concourse for build events failed: %s" str)))))
+      (switch-to-buffer log-buffer))))
 
 (defun concourse-view-job (job &optional buffer)
   (interactive)
