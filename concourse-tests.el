@@ -1,10 +1,9 @@
 ;;; -*- lexical-binding: t; -*-
 
+(require 'wid-edit)
+
 ;; allow the test to use untrusted CA cert for the test server
 (setq network-security-level 'low)
-
-;; TODO: how can i do this ?
-(load-file "../../straight/build/hierarchy/hierarchy.el")
 
 (defun fake-server-port ()
   (save-excursion
@@ -148,6 +147,15 @@
                       (end-of-line)
                       (should (equal (get-text-property (- (point) 1) 'face)
                                      '(:foreground "red"))))))
+
+(ert-deftest concourse-trigger-job-test ()
+  (with-fake-server nil
+                    (let ((concourse-refresh-args '((name . "some-job"))))
+                      (concourse~trigger-job)
+                      (with-current-buffer "concourse-fake-server"
+                        (goto-char (point-min))
+                        (should (= (count-matches "request:")
+                                   1))))))
 
 (ert-deftest pipeline-render-job-server-request-test ()
   (with-fake-server nil

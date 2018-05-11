@@ -260,6 +260,17 @@ tree will be rendered in BUFFER"
           (local-set-key (kbd "g") #'concourse-refresh)
           buffer)))))
 
+(defun concourse~trigger-job ()
+  "Triggers the JOB and refresh the buffer."
+  (interactive)
+  (let* ((name (cdr (assoc 'name concourse-refresh-args)))
+         (builds-path (concourse-builds-path name))
+         (url-request-method "POST")
+         (token (concourse-get-token "~/.flyrc"))
+         (url-request-extra-headers `(("Authorization" . ,(concat "Bearer " token)))))
+    (url-retrieve-synchronously (concat concourse-url builds-path) t))
+  (call-interactively #'concourse-refresh))
+
 (defun concourse-refresh ()
   "Refresh the current buffer by calling `concourse-refresh-func'.
 
@@ -451,6 +462,7 @@ number."
                                            (get-buffer-create "concourse-job-view"))))
                            (concourse~display-json name data #'concourse-view-build buffer)
                            (switch-to-buffer buffer)
+                           (local-set-key (kbd "t") #'concourse~trigger-job)
                            (setq-local concourse-refresh-func #'concourse-view-job)
                            (setq-local concourse-refresh-args job))))))
 

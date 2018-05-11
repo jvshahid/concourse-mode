@@ -51,6 +51,13 @@ func getFile(path string) http.Handler {
 	})
 }
 
+func success() http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		fmt.Printf("request: %s\n", req.RequestURI)
+		rw.WriteHeader(http.StatusOK)
+	})
+}
+
 func main() {
 	port := flag.Int("port", 0, "port to listen on")
 	pipelineJson := flag.String("pipeline-response", fmt.Sprintf("%s/fixtures/jobs-formatted.json", os.Getenv("GOPATH")), "path to the pipeline json response ")
@@ -64,6 +71,7 @@ func main() {
 	routes := rata.Routes{
 		{Name: "pipeline", Method: rata.GET, Path: "/api/v1/teams/:name/pipelines/:name/jobs"},
 		{Name: "job", Method: rata.GET, Path: "/api/v1/teams/:name/pipelines/:name/jobs/:job/builds"},
+		{Name: "trigger", Method: rata.POST, Path: "/api/v1/teams/:name/pipelines/:name/jobs/:job/builds"},
 		{Name: "events", Method: rata.GET, Path: "/api/v1/builds/:build/events"},
 		{Name: "plan", Method: rata.GET, Path: "/api/v1/builds/:build/plan"},
 	}
@@ -72,6 +80,7 @@ func main() {
 		"pipeline": getFile(*pipelineJson),
 		"plan":     getFile(*planJson),
 		"job":      getFile(*jobJson),
+		"trigger":  success(),
 		"events":   getEvents(*eventsJson),
 	}
 
