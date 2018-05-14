@@ -364,6 +364,11 @@ number."
     (if lineno
         (goto-line (string-to-number lineno)))))
 
+(defun concourse~kill-build-views ()
+  (interactive)
+  (kill-buffer "concourse-log-view")
+  (kill-buffer "concourse-build-view"))
+
 (defun concourse-view-build (build &optional view-buffer log-buffer)
   (let ((view-buffer (or view-buffer
                          (get-buffer-create "concourse-build-view")))
@@ -374,8 +379,7 @@ number."
     (with-current-buffer view-buffer
       (setq buffer-read-only nil)
       (erase-buffer)
-      (local-set-key (kbd "q") #'kill-current-buffer)
-      (local-set-key (kbd "g") #'concourse-refresh)
+      (local-set-key (kbd "q") #'concourse~kill-build-views)
       (local-set-key (kbd "s") (lambda ()
                                  (interactive)
                                  (switch-to-buffer log-buffer)))
@@ -384,8 +388,7 @@ number."
     (with-current-buffer log-buffer
       (setq buffer-read-only nil)
       (erase-buffer)
-      (local-set-key (kbd "q") #'kill-current-buffer)
-      (local-set-key (kbd "g") #'concourse-refresh)
+      (local-set-key (kbd "q") #'concourse~kill-build-views)
       (local-set-key (kbd "s") (lambda ()
                                  (interactive)
                                  (switch-to-buffer view-buffer)))
