@@ -446,7 +446,7 @@ number."
                                                   (save-excursion
                                                     (goto-char (point-max))
                                                     (insert (replace-regexp-in-string
-                                                             "\r\\|\e\\[[0-9]+m"
+                                                             "\r\\|\e\\[[0-9]+\\(;[0-9]+\\)?m"
                                                              ""
                                                              .data.payload))))))))
                                           (setq id nil
