@@ -436,6 +436,7 @@ number."
                                              ((string-prefix-p "finish-" .event)
                                               (with-current-buffer view-buffer
                                                 (let ((buffer-read-only nil))
+                                                  (goto-char (point-max))
                                                   (concourse/insert-event `((id . ,id)
                                                                             (event . ,event)
                                                                             (data . ,parsed-data))
