@@ -369,8 +369,8 @@ number."
 
 (defun concourse~kill-build-views ()
   (interactive)
-  (kill-buffer "concourse-log-view")
-  (kill-buffer "concourse-build-view"))
+  (kill-buffer "concourse-build-view")
+  (kill-buffer "concourse-log-view"))
 
 (defun concourse-view-build (build &optional view-buffer log-buffer)
   (let ((view-buffer (or view-buffer
