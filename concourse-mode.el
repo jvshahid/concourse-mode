@@ -369,7 +369,7 @@ number."
 
 (defun concourse~kill-build-views ()
   (interactive)
-  (let ((proc (get-buffer-process "concourse-build-view")))
+  (when-let ((proc (get-buffer-process "concourse-build-view")))
     ;; reset the proc filter/sentinel to avoid deleted buffer errors
     (set-process-filter proc (lambda (&rest args)))
     (set-process-sentinel proc (lambda (&rest args))))
