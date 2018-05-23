@@ -222,16 +222,24 @@ Internal use only"
 (defvar-local concourse-refresh-args nil
   "the args to pass to `concourse-refresh-func")
 
+(defun concourse-abort-build ()
+  (interactive)
+  (let-alist (get-text-property (point) 'concourse-elem)
+    (let* ((url-request-method "PUT")
+           (token (concourse-get-token "~/.flyrc"))
+           (url-request-extra-headers `(("Authorization" . ,(concat "Bearer " token)))))
+      (url-retrieve-synchronously (concat concourse-url .api_url "/abort") t))
+    (concourse-refresh)))
+
 (defun concourse~colored-name (elem _)
   "Return the name of the passed ELEM.
 
 Color text properties are added based on the element status.  Internal use only."
   (let-alist elem
     (insert " " .name)
-    (let ((building .next_build))
-      (let-alist (or .finished_build
-                     ;; when looking at a job's builds
-                     elem)
+    (let ((building .next_build)
+          (finished .finished_build))
+      (let-alist (or finished elem)     ;  finished_build only when listing jobs
         (let ((property (cond
                          ((string-equal .status "failed") '(:foreground "red"))
                          ((string-equal .status "succeeded") '(:foreground "green"))
@@ -240,7 +248,19 @@ Color text properties are added based on the element status.  Internal use only.
           (and property
                (add-face-text-property (point-min)
                                        (point-max)
-                                       property)))))))
+                                       property))
+          (unless finished
+            (let ((km (make-sparse-keymap)))
+              (define-key km (kbd "a") #'concourse-abort-build)
+              (define-key km (kbd "RET") #'push-button)
+              ;; if this is a single build then add a keymap to abort the build
+              (add-text-properties (point-min)
+                                   (point-max)
+                                   `(keymap ,km)))
+            (add-text-properties (point-min)
+                                 (point-max)
+                                 `(concourse-elem ,elem))))))))
+
 
 (defun concourse~display-json (root data func buffer)
   "Display the given json DATA as a tree.
