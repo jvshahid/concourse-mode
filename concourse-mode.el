@@ -226,18 +226,21 @@ Internal use only"
   "Return the name of the passed ELEM.
 
 Color text properties are added based on the element status.  Internal use only."
-  (insert " " (cdr (assoc 'name elem)))
-  (let* ((build (or (assoc 'finished_build elem)
-                    ;; when looking at a job's builds
-                    elem))
-         (status (cdr (assoc 'status build))))
-    (let ((property (cond
-                     ((string-equal status "failed") '(:foreground "red"))
-                     ((string-equal status "succeeded") '(:foreground "green")))))
-      (and property
-           (add-face-text-property (point-min)
-                                   (point-max)
-                                   property)))))
+  (let-alist elem
+    (insert " " .name)
+    (let ((building .next_build))
+      (let-alist (or .finished_build
+                     ;; when looking at a job's builds
+                     elem)
+        (let ((property (cond
+                         ((string-equal .status "failed") '(:foreground "red"))
+                         ((string-equal .status "succeeded") '(:foreground "green"))
+                         ((string-equal .status "aborted") '(:foreground "grey")))))
+          (if building (setq property (append property '(:background "orange"))))
+          (and property
+               (add-face-text-property (point-min)
+                                       (point-max)
+                                       property)))))))
 
 (defun concourse~display-json (root data func buffer)
   "Display the given json DATA as a tree.
