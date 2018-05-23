@@ -369,6 +369,10 @@ number."
 
 (defun concourse~kill-build-views ()
   (interactive)
+  (let ((proc (get-buffer-process "concourse-build-view")))
+    ;; reset the proc filter/sentinel to avoid deleted buffer errors
+    (set-process-filter proc (lambda (&rest args)))
+    (set-process-sentinel proc (lambda (&rest args))))
   (kill-buffer "concourse-build-view")
   (kill-buffer "concourse-log-view"))
 
@@ -406,6 +410,7 @@ number."
       (make-process :name "test-event-stream"
                     :buffer view-buffer
                     :coding 'utf-8
+                    :noquery t
                     :command (append '("curl"
                                        "-k"
                                        "-N"
