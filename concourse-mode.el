@@ -237,14 +237,21 @@ Internal use only"
 Color text properties are added based on the element status.  Internal use only."
   (let-alist elem
     (insert " " .name)
-    (let ((building .next_build)
+    (let ((building .next_build.status)
           (finished .finished_build))
       (let-alist (or finished elem)     ;  finished_build only when listing jobs
         (let ((property (cond
                          ((string-equal .status "failed") '(:foreground "red"))
                          ((string-equal .status "succeeded") '(:foreground "green"))
-                         ((string-equal .status "aborted") '(:foreground "grey")))))
-          (if building (setq property (append property '(:background "orange"))))
+                         ((string-equal .status "aborted") '(:foreground "grey"))
+                         ((string-equal .status "started") '(:background "orange"))
+                         ((string-equal .status "pending") '(:background "grey")))))
+
+          (let ((bg-property (cond
+                              ((string-equal building "started") '(:background "orange"))
+                              ((string-equal building "pending") '(:background "grey")))))
+            (setq property (append property bg-property)))
+
           (and property
                (add-face-text-property (point-min)
                                        (point-max)
