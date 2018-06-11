@@ -213,7 +213,7 @@ Internal use only"
 
 (defun concourse~stop-updating-mode-line ()
   "Stop updating concourse mode-line in the background."
-  (delete '(:eval (concourse-mode-line)) mode-line-modes)
+  (delete '(:eval (concourse~mode-line)) mode-line-modes)
   (cancel-timer concourse-timer))
 
 (defvar-local concourse-refresh-func nil
