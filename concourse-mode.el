@@ -390,7 +390,7 @@ number."
          (filename (replace-regexp-in-string "^/tmp/build/[^/]*\\|:[0-9]+$"
                                              ""
                                              filename)))
-    (find-file-other-window (concat "~/workspace/" filename))
+    (find-file-other-window (expand-file-name (concat "~/workspace/" filename)))
     (if lineno
         (goto-line (string-to-number lineno)))))
 
