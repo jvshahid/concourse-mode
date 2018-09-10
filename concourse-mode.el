@@ -17,10 +17,11 @@
   "Retrieves URL and call CALLBACK with the result.)
 
 Either `url-retrieve' or `url-retrieve-synchronously' is used depending on `noninteractive'"
-  (let ((buffer (url-retrieve-synchronously url t)))
-    (with-current-buffer buffer
-      (funcall callback nil))))
-  ;; (url-retrieve url callback nil t)
+  (if noninteractive
+      (let ((buffer (url-retrieve-synchronously url t)))
+        (with-current-buffer buffer
+          (funcall callback nil)))
+    (url-retrieve url callback nil t)))
 
 (defun concourse-parse-response (status)
   "Parse HTTP response in the current buffer, where STATUS is the status returned from `concourse-get-url'."
