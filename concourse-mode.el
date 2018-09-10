@@ -399,8 +399,8 @@ number."
   (interactive)
   (when-let ((proc (get-buffer-process "concourse-build-view")))
     ;; reset the proc filter/sentinel to avoid deleted buffer errors
-    (set-process-filter proc (lambda (&rest args)))
-    (set-process-sentinel proc (lambda (&rest args))))
+    (set-process-filter proc (lambda (&rest _)))
+    (set-process-sentinel proc (lambda (&rest _))))
   (kill-buffer "concourse-build-view")
   (kill-buffer "concourse-log-view"))
 
