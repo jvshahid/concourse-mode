@@ -281,12 +281,17 @@ tree will be rendered in BUFFER"
       (hierarchy-add-tree h root nil (lambda (n)
                                        (if (equal root n)
                                            (reverse data))))
-      (let ((buffer (hierarchy-tree-display h
-                                            (hierarchy-labelfn-button
-                                             #'concourse~colored-name
-                                             (lambda (elem _) (funcall func elem)))
-                                            buffer)))
-        (with-current-buffer buffer
+
+      (with-current-buffer buffer
+        ;; keep curpoint from being erased when major mode changes
+        (let ((curpoint (and (boundp 'curpoint) curpoint)))
+          (hierarchy-tree-display h
+                                  (hierarchy-labelfn-button
+                                   #'concourse~colored-name
+                                   (lambda (elem _) (funcall func elem)))
+                                  buffer)
+          (widget-button-press (point-min))
+          (when curpoint (goto-char curpoint))
           (local-set-key (kbd "q") #'kill-current-buffer)
           (local-set-key (kbd "g") #'concourse-refresh)
           buffer)))))
@@ -310,14 +315,8 @@ args.  The buffer is returned in the same state as before calling
 `concourse-refresh', e.g. if the hierarchy was expanded then it
 will be left expanded"
   (interactive)
-  (let* ((curpoint  (point))
-         (open      (concourse-> (point-min)
-                                 (widget-at)
-                                 (widget-get :parent)
-                                 (widget-get :open))))
-    (funcall concourse-refresh-func concourse-refresh-args)
-    (if open (widget-button-press (point-min)))
-    (goto-char curpoint)))
+  (setq-local curpoint (point))
+  (funcall concourse-refresh-func concourse-refresh-args))
 
 (defun concourse~assoc (x key)
   (alist-get key x))
