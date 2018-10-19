@@ -224,6 +224,7 @@ Internal use only"
   "the args to pass to `concourse-refresh-func")
 
 (defun concourse-abort-build ()
+  "Abort the build under point."
   (interactive)
   (let-alist (get-text-property (point) 'concourse-elem)
     (let* ((url-request-method "PUT")
@@ -268,7 +269,6 @@ Color text properties are added based on the element status.  Internal use only.
             (add-text-properties (point-min)
                                  (point-max)
                                  `(concourse-elem ,elem))))))))
-
 
 (defun concourse~display-json (root data func buffer)
   "Display the given json DATA as a tree.
@@ -322,27 +322,31 @@ will be left expanded"
 (defun concourse~assoc (x key)
   (alist-get key x))
 
-(defun concourse/get-in (x &rest keys)
+(defun concourse~get-in (x &rest keys)
   (seq-reduce #'concourse~assoc keys x))
 
-(defun concourse/event-id (event)
-  (concourse/get-in event 'data 'data 'origin 'id))
+(defun concourse~event-id (event)
+  (concourse~get-in event 'data 'data 'origin 'id))
 
 (defun concourse/event-version (event)
-  (let ((ver (car (concourse/get-in event 'data 'data 'version))))
+  (let ((ver (car (concourse~get-in event 'data 'data 'version))))
     (concat (symbol-name (car ver))
             " "
             (cdr ver))))
 
 (defun concourse/insert-event (event id->name)
-  (let ((name (gethash (concourse/event-id event) id->name)))
+  (let ((name (gethash (concourse~event-id event) id->name)))
     (insert (format "%s: %s\n" name (concourse/event-version event)))
-    (cl-loop for m across (concourse/get-in event 'data 'data 'metadata)
+    (cl-loop for m across (concourse~get-in event 'data 'data 'metadata)
              do (insert (format "\t%s: %s\n"
                                 (concourse~assoc m 'name)
                                 (concourse~assoc m 'value))))))
 
 (defun concourse~extract-plan-names (plan &optional tbl)
+  "Create a table from the job id to the job name.
+
+PLAN is traversed recursively.  TBL is an optional hash table
+which will be updated.  Otherwise a new table will be created."
   (let ((tbl (or tbl (make-hash-table :test 'equal))))
     (let-alist plan
       (cond
@@ -359,6 +363,9 @@ will be left expanded"
       tbl)))
 
 (defun concourse-build-id->name (build)
+  "Create a table from the job id to the job name.
+
+BUILD is the build id/number."
   (let* ((url (concourse~assoc build 'api_url))
          (buf (url-retrieve-synchronously (concat concourse-url url "/plan") t)))
     (with-current-buffer buf
@@ -395,7 +402,10 @@ number."
     (if lineno
         (goto-line (string-to-number lineno)))))
 
-(defun concourse~kill-build-views ()
+(defun concourse-kill-build-views ()
+  "Exit the current concourse buffer.
+
+This will cause the buffer to be killed."
   (interactive)
   (when-let ((proc (get-buffer-process "concourse-build-view")))
     ;; reset the proc filter/sentinel to avoid deleted buffer errors
@@ -414,16 +424,17 @@ number."
     (with-current-buffer view-buffer
       (setq buffer-read-only nil)
       (erase-buffer)
-      (local-set-key (kbd "q") #'concourse~kill-build-views)
+      (local-set-key (kbd "q") #'concourse-kill-build-views)
       (local-set-key (kbd "s") (lambda ()
                                  (interactive)
                                  (switch-to-buffer log-buffer)))
       (setq buffer-read-only t))
 
     (with-current-buffer log-buffer
+      (setq-local window-point-insertion-type t)
       (setq buffer-read-only nil)
       (erase-buffer)
-      (local-set-key (kbd "q") #'concourse~kill-build-views)
+      (local-set-key (kbd "q") #'concourse-kill-build-views)
       (local-set-key (kbd "s") (lambda ()
                                  (interactive)
                                  (switch-to-buffer view-buffer)))
@@ -520,7 +531,8 @@ number."
                                          (get-buffer-create "concourse-pipeline-view"))))
                          (concourse~display-json concourse-pipeline
                                                  data
-                                                 #'concourse-view-job buffer)
+                                                 #'concourse-view-job
+                                                 buffer)
                          (switch-to-buffer buffer)
                          (setq-local concourse-refresh-func #'concourse-view-pipeline)))))
 
