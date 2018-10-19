@@ -474,31 +474,32 @@ This will cause the buffer to be killed."
                                    ((string-prefix-p "id: " l) (setq id (substring l (length "id: "))))
                                    ((string-prefix-p "data: " l) (setq data (substring l (length "data: "))))
                                    ((string-prefix-p "event: " l) (setq event (substring l (length "event: ")))))
-                                  (if (and id event data)
-                                      (progn
-                                        (let ((parsed-data (json-read-from-string data)))
-                                          (let-alist parsed-data
-                                            (cond
-                                             ((string-prefix-p "finish-" .event)
-                                              (with-current-buffer view-buffer
-                                                (let ((buffer-read-only nil))
+                                  (when (and id event data)
+                                    (let ((parsed-data (json-read-from-string data)))
+                                      (let-alist parsed-data
+                                        (cond
+                                         ((string-prefix-p "finish-" .event)
+                                          (with-current-buffer view-buffer
+                                            (let ((buffer-read-only nil))
+                                              (goto-char (point-max))
+                                              (concourse/insert-event `((id . ,id)
+                                                                        (event . ,event)
+                                                                        (data . ,parsed-data))
+                                                                      id->name))))
+                                         ((equal "log" .event)
+                                          (with-current-buffer log-buffer
+                                            (let ((buffer-read-only nil))
+                                              (let ((pos (copy-marker (point) t)))
+                                                (ignore-errors
                                                   (goto-char (point-max))
-                                                  (concourse/insert-event `((id . ,id)
-                                                                            (event . ,event)
-                                                                            (data . ,parsed-data))
-                                                                          id->name))))
-                                             ((equal "log" .event)
-                                              (with-current-buffer log-buffer
-                                                (let ((buffer-read-only nil))
-                                                  (save-excursion
-                                                    (goto-char (point-max))
-                                                    (insert (replace-regexp-in-string
-                                                             "\r\\|\e\\[[0-9]+\\(;[0-9]+\\)?m"
-                                                             ""
-                                                             .data.payload))))))))
-                                          (setq id nil
-                                                event nil
-                                                data nil))))
+                                                  (insert (replace-regexp-in-string
+                                                           "\r\\|\e\\[[0-9]+\\(;[0-9]+\\)?m"
+                                                           ""
+                                                           .data.payload)))
+                                                (goto-char pos)))))))
+                                      (setq id nil
+                                            event nil
+                                            data nil)))
                                   (if (string-suffix-p "end" event)
                                       (kill-process (get-buffer-process view-buffer))))))
                     :sentinel (lambda (_ str)
