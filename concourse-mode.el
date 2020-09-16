@@ -489,14 +489,12 @@ This will cause the buffer to be killed."
                                          ((equal "log" .event)
                                           (with-current-buffer log-buffer
                                             (let ((buffer-read-only nil))
-                                              (let ((pos (copy-marker (point) t)))
-                                                (ignore-errors
-                                                  (goto-char (point-max))
-                                                  (insert (replace-regexp-in-string
-                                                           "\r\\|\e\\[[0-9]+\\(;[0-9]+\\)?m"
-                                                           ""
-                                                           .data.payload)))
-                                                (goto-char pos)))))))
+                                              (save-excursion
+                                                (goto-char (point-max))
+                                                (insert (replace-regexp-in-string
+                                                         "\r\\|\e\\[[0-9]+\\(;[0-9]+\\)?m"
+                                                         ""
+                                                         .data.payload))))))))
                                       (setq id nil
                                             event nil
                                             data nil)))
